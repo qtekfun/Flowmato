@@ -5,18 +5,55 @@ import { useColorScheme } from 'react-native';
 import { useTimerStore } from '@/store/timerStore';
 import { TimerConfig } from '@/types/timer';
 
+interface InputState {
+  [key: string]: string;
+}
+
 export default function TimerSettings() {
   const colorScheme = useColorScheme();
   const { config, updateConfig } = useTimerStore();
   
   // Local state for form inputs
   const [localConfig, setLocalConfig] = useState<TimerConfig>(config);
+  const [inputStates, setInputStates] = useState<InputState>({
+    focusDuration: config.focusDuration.toString(),
+    shortBreakDuration: config.shortBreakDuration.toString(),
+    longBreakDuration: config.longBreakDuration.toString(),
+    longBreakEvery: config.longBreakEvery.toString(),
+    totalSessions: (config.totalSessions || 8).toString(),
+  });
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleConfigChange = (key: keyof TimerConfig, value: any) => {
     const newConfig = { ...localConfig, [key]: value };
     setLocalConfig(newConfig);
     setHasChanges(true);
+  };
+
+  const handleNumberInputChange = (key: string, text: string, min: number, max: number) => {
+    // Update the input state to show what user typed
+    setInputStates(prev => ({ ...prev, [key]: text }));
+    
+    // Try to parse the number
+    const num = parseInt(text);
+    
+    // If it's a valid number within range, update the config
+    if (!isNaN(num) && num >= min && num <= max) {
+      handleConfigChange(key as keyof TimerConfig, num);
+    } else if (!isNaN(num)) {
+      // If number is valid but out of range, clamp it
+      const clampedValue = Math.max(min, Math.min(max, num));
+      handleConfigChange(key as keyof TimerConfig, clampedValue);
+      // Update input state to show the clamped value
+      setInputStates(prev => ({ ...prev, [key]: clampedValue.toString() }));
+    }
+    // If it's not a valid number, just update the input state but not the config
+  };
+
+  const handleNumberButtonChange = (key: keyof TimerConfig, value: number) => {
+    handleConfigChange(key, value);
+    // Also update the input state to keep them in sync
+    setInputStates(prev => ({ ...prev, [key as string]: value.toString() }));
   };
 
   const handleSave = () => {
@@ -26,101 +63,120 @@ export default function TimerSettings() {
 
   const handleReset = () => {
     setLocalConfig(config);
+    setInputStates({
+      focusDuration: config.focusDuration.toString(),
+      shortBreakDuration: config.shortBreakDuration.toString(),
+      longBreakDuration: config.longBreakDuration.toString(),
+      longBreakEvery: config.longBreakEvery.toString(),
+      totalSessions: (config.totalSessions || 8).toString(),
+    });
     setHasChanges(false);
   };
 
   const renderNumberInput = (
     label: string,
+    configKey: keyof TimerConfig,
     value: number,
-    onChange: (value: number) => void,
     unit: string = 'min',
     min: number = 1,
     max: number = 120
-  ) => (
-    <View style={styles.settingRow}>
-      <View style={styles.settingInfo}>
-        <Text style={[
-          styles.settingLabel,
-          { color: colorScheme === 'dark' ? '#E5E7EB' : '#374151' }
-        ]}>
-          {label}
-        </Text>
-        <Text style={[
-          styles.settingUnit,
-          { color: colorScheme === 'dark' ? '#9CA3AF' : '#6B7280' }
-        ]}>
-          {unit}
-        </Text>
-      </View>
-      <View style={styles.numberInputContainer}>
-        <TouchableOpacity
-          style={[
-            styles.numberButton,
-            {
-              backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6',
-              borderColor: colorScheme === 'dark' ? '#4B5563' : '#D1D5DB',
-            }
-          ]}
-          onPress={() => onChange(Math.max(min, value - 1))}
-          disabled={value <= min}
-        >
+  ) => {
+    const inputValue = inputStates[configKey as string] || value.toString();
+    const isValidInput = !isNaN(parseInt(inputValue)) && 
+                        parseInt(inputValue) >= min && 
+                        parseInt(inputValue) <= max;
+    
+    return (
+      <View style={styles.settingRow}>
+        <View style={styles.settingInfo}>
           <Text style={[
-            styles.numberButtonText,
-            {
-              color: value <= min 
-                ? (colorScheme === 'dark' ? '#6B7280' : '#9CA3AF')
-                : (colorScheme === 'dark' ? '#E5E7EB' : '#374151')
-            }
+            styles.settingLabel,
+            { color: colorScheme === 'dark' ? '#E5E7EB' : '#374151' }
           ]}>
-            −
+            {label}
           </Text>
-        </TouchableOpacity>
-        
-        <TextInput
-          style={[
-            styles.numberInput,
-            {
-              backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF',
-              borderColor: colorScheme === 'dark' ? '#4B5563' : '#D1D5DB',
-              color: colorScheme === 'dark' ? '#E5E7EB' : '#374151',
-            }
-          ]}
-          value={value.toString()}
-          onChangeText={(text) => {
-            const num = parseInt(text) || 0;
-            if (num >= min && num <= max) {
-              onChange(num);
-            }
-          }}
-          keyboardType="numeric"
-          textAlign="center"
-        />
-        
-        <TouchableOpacity
-          style={[
-            styles.numberButton,
-            {
-              backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6',
-              borderColor: colorScheme === 'dark' ? '#4B5563' : '#D1D5DB',
-            }
-          ]}
-          onPress={() => onChange(Math.min(max, value + 1))}
-          disabled={value >= max}
-        >
           <Text style={[
-            styles.numberButtonText,
-            {
-              color: value >= max 
-                ? (colorScheme === 'dark' ? '#6B7280' : '#9CA3AF')
-                : (colorScheme === 'dark' ? '#E5E7EB' : '#374151')
-            }
+            styles.settingUnit,
+            { color: colorScheme === 'dark' ? '#9CA3AF' : '#6B7280' }
           ]}>
-            +
+            {unit} ({min}-{max})
           </Text>
-        </TouchableOpacity>
+        </View>
+        <View style={styles.numberInputContainer}>
+          <TouchableOpacity
+            style={[
+              styles.numberButton,
+              {
+                backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6',
+                borderColor: colorScheme === 'dark' ? '#4B5563' : '#D1D5DB',
+              }
+            ]}
+            onPress={() => handleNumberButtonChange(configKey, Math.max(min, value - 1))}
+            disabled={value <= min}
+          >
+            <Text style={[
+              styles.numberButtonText,
+              {
+                color: value <= min 
+                  ? (colorScheme === 'dark' ? '#6B7280' : '#9CA3AF')
+                  : (colorScheme === 'dark' ? '#E5E7EB' : '#374151')
+              }
+            ]}>
+              −
+            </Text>
+          </TouchableOpacity>
+          
+          <TextInput
+            style={[
+              styles.numberInput,
+              {
+                backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF',
+                borderColor: isValidInput 
+                  ? (colorScheme === 'dark' ? '#4B5563' : '#D1D5DB')
+                  : (colorScheme === 'dark' ? '#DC2626' : '#EF4444'),
+                color: colorScheme === 'dark' ? '#E5E7EB' : '#374151',
+              }
+            ]}
+            value={inputValue}
+            onChangeText={(text) => handleNumberInputChange(configKey as string, text, min, max)}
+            onBlur={() => {
+              // On blur, if input is invalid, reset to current valid value
+              const num = parseInt(inputValue);
+              if (isNaN(num) || num < min || num > max) {
+                setInputStates(prev => ({ ...prev, [configKey as string]: value.toString() }));
+              }
+            }}
+            keyboardType="numeric"
+            textAlign="center"
+            selectTextOnFocus={true}
+          />
+          
+          <TouchableOpacity
+            style={[
+              styles.numberButton,
+              {
+                backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6',
+                borderColor: colorScheme === 'dark' ? '#4B5563' : '#D1D5DB',
+              }
+            ]}
+            onPress={() => handleNumberButtonChange(configKey, Math.min(max, value + 1))}
+            disabled={value >= max}
+          >
+            <Text style={[
+              styles.numberButtonText,
+              {
+                color: value >= max 
+                  ? (colorScheme === 'dark' ? '#6B7280' : '#9CA3AF')
+                  : (colorScheme === 'dark' ? '#E5E7EB' : '#374151')
+              }
+            ]}>
+              +
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderSwitchRow = (
     label: string,
@@ -168,8 +224,8 @@ export default function TimerSettings() {
         
         {renderNumberInput(
           'Focus Session',
+          'focusDuration',
           localConfig.focusDuration,
-          (value) => handleConfigChange('focusDuration', value),
           'minutes',
           5,
           120
@@ -177,8 +233,8 @@ export default function TimerSettings() {
         
         {renderNumberInput(
           'Short Break',
+          'shortBreakDuration',
           localConfig.shortBreakDuration,
-          (value) => handleConfigChange('shortBreakDuration', value),
           'minutes',
           1,
           30
@@ -186,8 +242,8 @@ export default function TimerSettings() {
         
         {renderNumberInput(
           'Long Break',
+          'longBreakDuration',
           localConfig.longBreakDuration,
-          (value) => handleConfigChange('longBreakDuration', value),
           'minutes',
           5,
           60
@@ -195,11 +251,30 @@ export default function TimerSettings() {
         
         {renderNumberInput(
           'Long Break Every',
+          'longBreakEvery',
           localConfig.longBreakEvery,
-          (value) => handleConfigChange('longBreakEvery', value),
           'sessions',
           2,
           10
+        )}
+      </View>
+
+      {/* Session Planning Section */}
+      <View style={styles.section}>
+        <Text style={[
+          styles.sectionTitle,
+          { color: colorScheme === 'dark' ? '#FFFFFF' : '#111827' }
+        ]}>
+          Session Planning
+        </Text>
+        
+        {renderNumberInput(
+          'Total Focus Sessions',
+          'totalSessions',
+          localConfig.totalSessions || 8,
+          'sessions per day',
+          1,
+          20
         )}
       </View>
 

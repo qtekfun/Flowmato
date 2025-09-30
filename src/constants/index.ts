@@ -3,6 +3,7 @@ export const TIMER_DEFAULTS = {
   SHORT_BREAK_DURATION: 5, // minutes
   LONG_BREAK_DURATION: 15, // minutes
   LONG_BREAK_EVERY: 4, // sessions
+  TOTAL_SESSIONS: 8, // total focus sessions per day
   AUTO_START_NEXT: false,
   ALLOW_PAUSE: true,
 } as const;

@@ -7,6 +7,7 @@ export interface TimerConfig {
   shortBreakDuration: number; // in minutes
   longBreakDuration: number; // in minutes
   longBreakEvery: number; // every N sessions
+  totalSessions: number; // total focus sessions in a day
   autoStartNext: boolean;
   allowPause: boolean;
 }

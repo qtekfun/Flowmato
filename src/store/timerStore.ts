@@ -24,7 +24,17 @@ const loadPersistedConfig = (): TimerConfig => {
   try {
     const configStr = storage.getString(STORAGE_KEYS.TIMER_CONFIG);
     if (configStr) {
-      return JSON.parse(configStr);
+      const savedConfig = JSON.parse(configStr);
+      // Merge with defaults to ensure all fields are present
+      return {
+        focusDuration: savedConfig.focusDuration || TIMER_DEFAULTS.FOCUS_DURATION,
+        shortBreakDuration: savedConfig.shortBreakDuration || TIMER_DEFAULTS.SHORT_BREAK_DURATION,
+        longBreakDuration: savedConfig.longBreakDuration || TIMER_DEFAULTS.LONG_BREAK_DURATION,
+        longBreakEvery: savedConfig.longBreakEvery || TIMER_DEFAULTS.LONG_BREAK_EVERY,
+        totalSessions: savedConfig.totalSessions || TIMER_DEFAULTS.TOTAL_SESSIONS,
+        autoStartNext: savedConfig.autoStartNext !== undefined ? savedConfig.autoStartNext : TIMER_DEFAULTS.AUTO_START_NEXT,
+        allowPause: savedConfig.allowPause !== undefined ? savedConfig.allowPause : TIMER_DEFAULTS.ALLOW_PAUSE,
+      };
     }
   } catch (error) {
     console.warn('Failed to load timer config:', error);
@@ -35,6 +45,7 @@ const loadPersistedConfig = (): TimerConfig => {
     shortBreakDuration: TIMER_DEFAULTS.SHORT_BREAK_DURATION,
     longBreakDuration: TIMER_DEFAULTS.LONG_BREAK_DURATION,
     longBreakEvery: TIMER_DEFAULTS.LONG_BREAK_EVERY,
+    totalSessions: TIMER_DEFAULTS.TOTAL_SESSIONS,
     autoStartNext: TIMER_DEFAULTS.AUTO_START_NEXT,
     allowPause: TIMER_DEFAULTS.ALLOW_PAUSE,
   };
@@ -104,7 +115,7 @@ export const useTimerStore = create<TimerStore>()(
       state: initialState,
       timeRemaining: initialTimeRemaining,
       sessionCount,
-      totalSessions: config.longBreakEvery,
+      totalSessions: config.totalSessions,
       isRunning: false,
       isPaused: initialState === 'paused',
 
@@ -227,15 +238,25 @@ export const useTimerStore = create<TimerStore>()(
           newSessionCount += 1;
         }
 
-        set({
-          phase: nextPhase,
-          state: 'idle',
-          isRunning: false,
-          isPaused: false,
-          timeRemaining: duration * 60,
-          sessionCount: newSessionCount,
-          currentSession: null,
-        });
+        // Check if all sessions are completed
+        if (newSessionCount >= state.totalSessions && state.phase === 'focus') {
+          set({
+            state: 'completed',
+            isRunning: false,
+            isPaused: false,
+            currentSession: null,
+          });
+        } else {
+          set({
+            phase: nextPhase,
+            state: 'idle',
+            isRunning: false,
+            isPaused: false,
+            timeRemaining: duration * 60,
+            sessionCount: newSessionCount,
+            currentSession: null,
+          });
+        }
 
         // Clear persisted session
         storage.delete(STORAGE_KEYS.CURRENT_SESSION);
@@ -275,7 +296,7 @@ export const useTimerStore = create<TimerStore>()(
 
         set({
           config: updatedConfig,
-          totalSessions: updatedConfig.longBreakEvery,
+          totalSessions: updatedConfig.totalSessions,
         });
 
         // Persist updated config
@@ -346,17 +367,29 @@ useTimerStore.subscribe(
             storage.delete(STORAGE_KEYS.CURRENT_SESSION);
           }
 
-          // Auto-start next session if enabled
+          // Auto-start next session if enabled and not all sessions completed
           if (state.config.autoStartNext) {
             setTimeout(() => {
               const currentState = useTimerStore.getState();
-              const nextPhase = calculateNextPhase(currentState.phase, currentState.sessionCount, currentState.config);
-              const duration = getDurationForPhase(nextPhase, currentState.config);
-
+              
+              // Check if all sessions are completed
               let newSessionCount = currentState.sessionCount;
               if (currentState.phase === 'focus') {
                 newSessionCount += 1;
               }
+              
+              // Don't auto-start if we've completed all sessions for the day
+              if (newSessionCount >= currentState.totalSessions && currentState.phase === 'focus') {
+                // All sessions completed for the day
+                useTimerStore.setState({
+                  state: 'completed',
+                  isRunning: false,
+                });
+                return;
+              }
+              
+              const nextPhase = calculateNextPhase(currentState.phase, currentState.sessionCount, currentState.config);
+              const duration = getDurationForPhase(nextPhase, currentState.config);
 
               useTimerStore.setState({
                 phase: nextPhase,
