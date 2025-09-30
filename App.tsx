@@ -7,6 +7,7 @@ import { useColorScheme } from 'react-native';
 import TimerDisplay from './src/components/timer/TimerDisplay';
 import TimerControls from './src/components/timer/TimerControls';
 import ProgressIndicator from './src/components/timer/ProgressIndicator';
+import TimerSettings from './src/components/settings/TimerSettings';
 import { useTimerStore } from './src/store/timerStore';
 
 export default function App() {
@@ -97,14 +98,7 @@ export default function App() {
           Settings
         </Text>
       </View>
-      <View style={styles.settingsContent}>
-        <Text style={[
-          styles.settingsText,
-          { color: colorScheme === 'dark' ? '#E5E7EB' : '#374151' }
-        ]}>
-          Timer settings will be available here.
-        </Text>
-      </View>
+      <TimerSettings />
     </>
   );
 

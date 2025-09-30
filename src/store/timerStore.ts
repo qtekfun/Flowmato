@@ -29,7 +29,7 @@ const loadPersistedConfig = (): TimerConfig => {
   } catch (error) {
     console.warn('Failed to load timer config:', error);
   }
-  
+
   return {
     focusDuration: TIMER_DEFAULTS.FOCUS_DURATION,
     shortBreakDuration: TIMER_DEFAULTS.SHORT_BREAK_DURATION,
@@ -79,18 +79,18 @@ export const useTimerStore = create<TimerStore>()(
     const config = loadPersistedConfig();
     const currentSession = loadCurrentSession();
     const sessionHistory = loadSessionHistory();
-    
+
     // Calculate initial state based on persisted session
     let initialPhase: TimerPhase = 'focus';
     let initialTimeRemaining = config.focusDuration * 60;
     let initialState: TimerState = 'idle';
     let sessionCount = 0;
-    
+
     if (currentSession && !currentSession.completed) {
       initialPhase = currentSession.phase;
       initialState = 'paused';
       sessionCount = sessionHistory.filter(s => s.completed && s.phase === 'focus').length;
-      
+
       // Calculate remaining time based on elapsed time
       const now = new Date();
       const elapsed = Math.floor((now.getTime() - currentSession.startTime.getTime()) / 1000);
@@ -107,24 +107,24 @@ export const useTimerStore = create<TimerStore>()(
       totalSessions: config.longBreakEvery,
       isRunning: false,
       isPaused: initialState === 'paused',
-      
+
       // Configuration
       config,
-      
+
       // Session tracking
       currentSession,
       sessionHistory,
-      
+
       // Actions
       start: () => {
         const state = get();
         const now = new Date();
-        
+
         if (state.state === 'idle' || state.state === 'completed') {
           // Start new session
           const duration = getDurationForPhase(state.phase, state.config);
           const session = createTimerSession(state.phase, duration);
-          
+
           set({
             state: 'running',
             isRunning: true,
@@ -132,7 +132,7 @@ export const useTimerStore = create<TimerStore>()(
             timeRemaining: duration * 60,
             currentSession: session,
           });
-          
+
           // Persist session
           storage.set(STORAGE_KEYS.CURRENT_SESSION, JSON.stringify(session));
         } else if (state.state === 'paused') {
@@ -144,7 +144,7 @@ export const useTimerStore = create<TimerStore>()(
           });
         }
       },
-      
+
       pause: () => {
         const state = get();
         if (state.state === 'running' && state.config.allowPause) {
@@ -155,7 +155,7 @@ export const useTimerStore = create<TimerStore>()(
           });
         }
       },
-      
+
       resume: () => {
         const state = get();
         if (state.state === 'paused') {
@@ -166,17 +166,17 @@ export const useTimerStore = create<TimerStore>()(
           });
         }
       },
-      
+
       reset: () => {
         const state = get();
         const duration = getDurationForPhase(state.phase, state.config);
-        
+
         // Clear timer interval if running
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
         }
-        
+
         set({
           state: 'idle',
           isRunning: false,
@@ -184,20 +184,20 @@ export const useTimerStore = create<TimerStore>()(
           timeRemaining: duration * 60,
           currentSession: null,
         });
-        
+
         // Clear persisted session
         storage.delete(STORAGE_KEYS.CURRENT_SESSION);
       },
-      
+
       skip: () => {
         const state = get();
-        
+
         // Clear timer interval if running
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
         }
-        
+
         // Complete current session as interrupted
         if (state.currentSession) {
           const completedSession = {
@@ -207,26 +207,26 @@ export const useTimerStore = create<TimerStore>()(
             interrupted: true,
             actualDuration: state.currentSession.plannedDuration - (state.timeRemaining / 60),
           };
-          
+
           const updatedHistory = [...state.sessionHistory, completedSession];
-          
+
           set({
             sessionHistory: updatedHistory,
           });
-          
+
           // Persist updated history
           storage.set(STORAGE_KEYS.SESSION_HISTORY, JSON.stringify(updatedHistory));
         }
-        
+
         // Move to next phase
         const nextPhase = calculateNextPhase(state.phase, state.sessionCount, state.config);
         const duration = getDurationForPhase(nextPhase, state.config);
-        
+
         let newSessionCount = state.sessionCount;
         if (state.phase === 'focus') {
           newSessionCount += 1;
         }
-        
+
         set({
           phase: nextPhase,
           state: 'idle',
@@ -236,23 +236,23 @@ export const useTimerStore = create<TimerStore>()(
           sessionCount: newSessionCount,
           currentSession: null,
         });
-        
+
         // Clear persisted session
         storage.delete(STORAGE_KEYS.CURRENT_SESSION);
       },
-      
+
       resetDailyProgress: () => {
         const state = get();
-        
+
         // Clear timer interval if running
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
         }
-        
+
         // Reset to initial state
         const duration = getDurationForPhase('focus', state.config);
-        
+
         set({
           phase: 'focus',
           state: 'idle',
@@ -263,24 +263,24 @@ export const useTimerStore = create<TimerStore>()(
           currentSession: null,
           sessionHistory: [],
         });
-        
+
         // Clear all persisted data
         storage.delete(STORAGE_KEYS.CURRENT_SESSION);
         storage.delete(STORAGE_KEYS.SESSION_HISTORY);
       },
-      
+
       updateConfig: (newConfig: Partial<TimerConfig>) => {
         const state = get();
         const updatedConfig = { ...state.config, ...newConfig };
-        
+
         set({
           config: updatedConfig,
           totalSessions: updatedConfig.longBreakEvery,
         });
-        
+
         // Persist updated config
         storage.set(STORAGE_KEYS.TIMER_CONFIG, JSON.stringify(updatedConfig));
-        
+
         // Update time remaining if timer is not running
         if (state.state === 'idle' || state.state === 'completed') {
           const duration = getDurationForPhase(state.phase, updatedConfig);
@@ -313,15 +313,15 @@ useTimerStore.subscribe(
   (isRunning) => {
     if (isRunning) {
       if (timerInterval) clearInterval(timerInterval);
-      
+
       timerInterval = setInterval(() => {
         const state = useTimerStore.getState();
-        
+
         if (state.timeRemaining <= 0) {
           // Timer completed
           clearInterval(timerInterval!);
           timerInterval = null;
-          
+
           // Complete current session
           if (state.currentSession) {
             const completedSession = {
@@ -331,39 +331,39 @@ useTimerStore.subscribe(
               interrupted: false,
               actualDuration: state.currentSession.plannedDuration,
             };
-            
+
             const updatedHistory = [...state.sessionHistory, completedSession];
-            
+
             useTimerStore.setState({
               sessionHistory: updatedHistory,
               state: 'completed',
               isRunning: false,
               currentSession: null,
             });
-            
+
             // Persist updated history
             storage.set(STORAGE_KEYS.SESSION_HISTORY, JSON.stringify(updatedHistory));
             storage.delete(STORAGE_KEYS.CURRENT_SESSION);
           }
-          
+
           // Auto-start next session if enabled
           if (state.config.autoStartNext) {
             setTimeout(() => {
               const currentState = useTimerStore.getState();
               const nextPhase = calculateNextPhase(currentState.phase, currentState.sessionCount, currentState.config);
               const duration = getDurationForPhase(nextPhase, currentState.config);
-              
+
               let newSessionCount = currentState.sessionCount;
               if (currentState.phase === 'focus') {
                 newSessionCount += 1;
               }
-              
+
               useTimerStore.setState({
                 phase: nextPhase,
                 sessionCount: newSessionCount,
                 timeRemaining: duration * 60,
               });
-              
+
               useTimerStore.getState().start();
             }, 1000);
           }
