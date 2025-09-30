@@ -45,6 +45,7 @@ export interface TimerStore {
   resume: () => void;
   reset: () => void;
   skip: () => void;
+  resetDailyProgress: () => void;
   updateConfig: (config: Partial<TimerConfig>) => void;
 }
 

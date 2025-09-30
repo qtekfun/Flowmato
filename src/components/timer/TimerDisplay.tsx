@@ -7,7 +7,7 @@ import { formatTime, getPhaseColor } from '@/utils/timer';
 
 export default function TimerDisplay() {
   const colorScheme = useColorScheme();
-  const { timeRemaining, phase } = useTimerStore();
+  const { timeRemaining, phase, sessionCount, totalSessions } = useTimerStore();
   
   const phaseColor = getPhaseColor(phase, colorScheme === 'dark');
   
@@ -38,6 +38,14 @@ export default function TimerDisplay() {
         ]}
       >
         {getPhaseDisplayName(phase)}
+      </Text>
+      
+      {/* Session Progress */}
+      <Text style={[
+        styles.sessionProgress,
+        { color: colorScheme === 'dark' ? '#D1D5DB' : '#374151' }
+      ]}>
+        Session {sessionCount + 1} of {totalSessions}
       </Text>
       
       {/* Secondary Info */}
@@ -88,6 +96,12 @@ const styles = StyleSheet.create({
   phaseLabel: {
     fontSize: 20,
     fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  sessionProgress: {
+    fontSize: 16,
+    fontWeight: '500',
     textAlign: 'center',
     marginBottom: 8,
   },

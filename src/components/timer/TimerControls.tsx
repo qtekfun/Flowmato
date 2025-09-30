@@ -7,7 +7,7 @@ import { useTheme } from '@/providers/ThemeProvider';
 
 export default function TimerControls() {
   const colorScheme = useColorScheme();
-  const { start, pause, resume, reset, skip, state, config } = useTimerStore();
+  const { start, pause, resume, reset, skip, resetDailyProgress, state, config } = useTimerStore();
   
   const handlePrimaryAction = () => {
     switch (state) {
@@ -114,6 +114,26 @@ export default function TimerControls() {
             Skip
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.secondaryButton,
+            {
+              backgroundColor: colorScheme === 'dark' ? '#DC2626' : '#EF4444',
+              borderColor: colorScheme === 'dark' ? '#DC2626' : '#EF4444',
+            }
+          ]}
+          onPress={resetDailyProgress}
+        >
+          <Text style={[
+            styles.secondaryButtonText,
+            {
+              color: '#FFFFFF',
+            }
+          ]}>
+            Reset Day
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -142,18 +162,21 @@ const styles = StyleSheet.create({
   },
   secondaryActions: {
     flexDirection: 'row',
-    gap: 16,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 12,
+    maxWidth: 280,
   },
   secondaryButton: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
-    minWidth: 80,
+    minWidth: 75,
     alignItems: 'center',
   },
   secondaryButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
   },
 });

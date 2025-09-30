@@ -171,6 +171,12 @@ export const useTimerStore = create<TimerStore>()(
         const state = get();
         const duration = getDurationForPhase(state.phase, state.config);
         
+        // Clear timer interval if running
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        
         set({
           state: 'idle',
           isRunning: false,
@@ -185,6 +191,12 @@ export const useTimerStore = create<TimerStore>()(
       
       skip: () => {
         const state = get();
+        
+        // Clear timer interval if running
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
         
         // Complete current session as interrupted
         if (state.currentSession) {
@@ -227,6 +239,34 @@ export const useTimerStore = create<TimerStore>()(
         
         // Clear persisted session
         storage.delete(STORAGE_KEYS.CURRENT_SESSION);
+      },
+      
+      resetDailyProgress: () => {
+        const state = get();
+        
+        // Clear timer interval if running
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        
+        // Reset to initial state
+        const duration = getDurationForPhase('focus', state.config);
+        
+        set({
+          phase: 'focus',
+          state: 'idle',
+          isRunning: false,
+          isPaused: false,
+          timeRemaining: duration * 60,
+          sessionCount: 0,
+          currentSession: null,
+          sessionHistory: [],
+        });
+        
+        // Clear all persisted data
+        storage.delete(STORAGE_KEYS.CURRENT_SESSION);
+        storage.delete(STORAGE_KEYS.SESSION_HISTORY);
       },
       
       updateConfig: (newConfig: Partial<TimerConfig>) => {
