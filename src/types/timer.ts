@@ -76,20 +76,3 @@ export interface AppSettings {
   language: string;
   analytics: boolean;
 }
-
-export interface StatsData {
-  totalFocusTime: number; // in minutes
-  totalBreakTime: number; // in minutes
-  completedSessions: number;
-  totalSessions: number;
-  streak: number;
-  lastSessionDate: Date | null;
-  weeklyStats: WeeklyStats[];
-}
-
-export interface WeeklyStats {
-  week: string; // ISO week
-  focusTime: number;
-  sessions: number;
-  completionRate: number;
-}

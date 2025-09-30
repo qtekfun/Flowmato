@@ -34,7 +34,6 @@ export const STORAGE_KEYS = {
   TIMER_CONFIG: 'timer_config',
   APP_SETTINGS: 'app_settings',
   SESSION_HISTORY: 'session_history',
-  STATS_DATA: 'stats_data',
   CURRENT_SESSION: 'current_session',
 } as const;
 

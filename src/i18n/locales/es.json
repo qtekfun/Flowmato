@@ -5,8 +5,7 @@
   },
   "navigation": {
     "home": "Temporizador",
-    "settings": "Configuración",
-    "stats": "Estadísticas"
+    "settings": "Configuración"
   },
   "phases": {
     "focus": "Tiempo de Enfoque",
@@ -46,16 +45,6 @@
     "language": "Idioma",
     "privacy": "Privacidad",
     "analytics": "Analíticas"
-  },
-  "stats": {
-    "title": "Estadísticas",
-    "today": "Hoy",
-    "thisWeek": "Esta Semana",
-    "thisMonth": "Este Mes",
-    "totalFocusTime": "Tiempo Total de Enfoque",
-    "completedSessions": "Sesiones Completadas",
-    "streak": "Racha Actual",
-    "completionRate": "Tasa de Finalización"
   },
   "common": {
     "save": "Guardar",

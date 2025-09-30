@@ -12,7 +12,7 @@ import { useTimerStore } from './src/store/timerStore';
 
 export default function App() {
   const colorScheme = useColorScheme();
-  const [currentView, setCurrentView] = React.useState<'timer' | 'settings' | 'stats'>('timer');
+  const [currentView, setCurrentView] = React.useState<'timer' | 'settings'>('timer');
   const { phase, sessionCount, totalSessions } = useTimerStore();
 
   const renderHeader = () => (
@@ -32,17 +32,6 @@ export default function App() {
         </Text>
       </View>
       <View style={styles.headerActions}>
-        <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={() => setCurrentView('stats')}
-        >
-          <Text style={[
-            styles.headerButtonText,
-            { color: colorScheme === 'dark' ? '#60A5FA' : '#2563EB' }
-          ]}>
-            Stats
-          </Text>
-        </TouchableOpacity>
         <TouchableOpacity 
           style={styles.headerButton}
           onPress={() => setCurrentView('settings')}
@@ -102,35 +91,6 @@ export default function App() {
     </>
   );
 
-  const renderStatsView = () => (
-    <>
-      <View style={styles.screenHeader}>
-        <TouchableOpacity onPress={() => setCurrentView('timer')}>
-          <Text style={[
-            styles.backButton,
-            { color: colorScheme === 'dark' ? '#60A5FA' : '#2563EB' }
-          ]}>
-            ← Back
-          </Text>
-        </TouchableOpacity>
-        <Text style={[
-          styles.screenTitle,
-          { color: colorScheme === 'dark' ? '#FFFFFF' : '#111827' }
-        ]}>
-          Statistics
-        </Text>
-      </View>
-      <View style={styles.statsContent}>
-        <Text style={[
-          styles.statsText,
-          { color: colorScheme === 'dark' ? '#E5E7EB' : '#374151' }
-        ]}>
-          Your productivity statistics will appear here.
-        </Text>
-      </View>
-    </>
-  );
-
   return (
     <SafeAreaProvider>
       <SafeAreaView style={[
@@ -143,7 +103,6 @@ export default function App() {
         
         {currentView === 'timer' && renderTimerView()}
         {currentView === 'settings' && renderSettingsView()}
-        {currentView === 'stats' && renderStatsView()}
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -237,15 +196,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   settingsText: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  statsContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statsText: {
     fontSize: 16,
     textAlign: 'center',
   },

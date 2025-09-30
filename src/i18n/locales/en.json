@@ -5,8 +5,7 @@
   },
   "navigation": {
     "home": "Timer",
-    "settings": "Settings",
-    "stats": "Statistics"
+    "settings": "Settings"
   },
   "phases": {
     "focus": "Focus Time",
@@ -46,16 +45,6 @@
     "language": "Language",
     "privacy": "Privacy",
     "analytics": "Analytics"
-  },
-  "stats": {
-    "title": "Statistics",
-    "today": "Today",
-    "thisWeek": "This Week",
-    "thisMonth": "This Month",
-    "totalFocusTime": "Total Focus Time",
-    "completedSessions": "Completed Sessions",
-    "streak": "Current Streak",
-    "completionRate": "Completion Rate"
   },
   "common": {
     "save": "Save",
