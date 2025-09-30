@@ -1,0 +1,73 @@
+{
+  "app": {
+    "title": "Flowmato",
+    "subtitle": "Focus Timer"
+  },
+  "navigation": {
+    "home": "Timer",
+    "settings": "Settings",
+    "stats": "Statistics"
+  },
+  "phases": {
+    "focus": "Focus Time",
+    "shortBreak": "Short Break",
+    "longBreak": "Long Break"
+  },
+  "timer": {
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "reset": "Reset",
+    "skip": "Skip",
+    "timeUp": "Time's up!",
+    "stayFocused": "Stay focused!",
+    "takeABreak": "Take a break!",
+    "enjoyYourBreak": "Enjoy your break!"
+  },
+  "settings": {
+    "title": "Settings",
+    "timer": "Timer Settings",
+    "focusDuration": "Focus Duration",
+    "shortBreakDuration": "Short Break Duration",
+    "longBreakDuration": "Long Break Duration",
+    "longBreakEvery": "Long Break Every",
+    "autoStartNext": "Auto-start Next Session",
+    "allowPause": "Allow Pause",
+    "notifications": "Notifications",
+    "enableNotifications": "Enable Notifications",
+    "sound": "Sound",
+    "vibration": "Vibration",
+    "audio": "Audio Settings",
+    "theme": "Audio Theme",
+    "volume": "Volume",
+    "appearance": "Appearance",
+    "colorScheme": "Color Scheme",
+    "highContrast": "High Contrast",
+    "language": "Language",
+    "privacy": "Privacy",
+    "analytics": "Analytics"
+  },
+  "stats": {
+    "title": "Statistics",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "totalFocusTime": "Total Focus Time",
+    "completedSessions": "Completed Sessions",
+    "streak": "Current Streak",
+    "completionRate": "Completion Rate"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "minutes": "minutes",
+    "sessions": "sessions",
+    "on": "On",
+    "off": "Off",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "english": "English",
+    "spanish": "Spanish"
+  }
+}

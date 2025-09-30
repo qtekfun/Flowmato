@@ -1,0 +1,37 @@
+{
+  "preset": "jest-expo",
+  "setupFilesAfterEnv": [
+    "@testing-library/jest-native/extend-expect"
+  ],
+  "moduleNameMapping": {
+    "^@/(.*)$": "<rootDir>/src/$1"
+  },
+  "collectCoverageFrom": [
+    "src/**/*.{js,jsx,ts,tsx}",
+    "app/**/*.{js,jsx,ts,tsx}",
+    "!src/**/*.d.ts",
+    "!src/**/*.test.{js,jsx,ts,tsx}",
+    "!src/**/*.spec.{js,jsx,ts,tsx}",
+    "!src/**/index.{js,jsx,ts,tsx}"
+  ],
+  "coverageThreshold": {
+    "global": {
+      "lines": 90,
+      "statements": 90,
+      "branches": 85,
+      "functions": 90
+    }
+  },
+  "testMatch": [
+    "**/__tests__/**/*.(js|jsx|ts|tsx)",
+    "**/*.(test|spec).(js|jsx|ts|tsx)"
+  ],
+  "transform": {
+    "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", {
+      "presets": ["babel-preset-expo"]
+    }]
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
+  ]
+}

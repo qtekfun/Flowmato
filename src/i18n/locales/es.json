@@ -1,0 +1,73 @@
+{
+  "app": {
+    "title": "Flowmato",
+    "subtitle": "Temporizador de Enfoque"
+  },
+  "navigation": {
+    "home": "Temporizador",
+    "settings": "Configuración",
+    "stats": "Estadísticas"
+  },
+  "phases": {
+    "focus": "Tiempo de Enfoque",
+    "shortBreak": "Descanso Corto",
+    "longBreak": "Descanso Largo"
+  },
+  "timer": {
+    "start": "Iniciar",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "reset": "Reiniciar",
+    "skip": "Saltar",
+    "timeUp": "¡Tiempo terminado!",
+    "stayFocused": "¡Mantente enfocado!",
+    "takeABreak": "¡Tómate un descanso!",
+    "enjoyYourBreak": "¡Disfruta tu descanso!"
+  },
+  "settings": {
+    "title": "Configuración",
+    "timer": "Configuración del Temporizador",
+    "focusDuration": "Duración del Enfoque",
+    "shortBreakDuration": "Duración del Descanso Corto",
+    "longBreakDuration": "Duración del Descanso Largo",
+    "longBreakEvery": "Descanso Largo Cada",
+    "autoStartNext": "Iniciar Automáticamente la Siguiente Sesión",
+    "allowPause": "Permitir Pausar",
+    "notifications": "Notificaciones",
+    "enableNotifications": "Habilitar Notificaciones",
+    "sound": "Sonido",
+    "vibration": "Vibración",
+    "audio": "Configuración de Audio",
+    "theme": "Tema de Audio",
+    "volume": "Volumen",
+    "appearance": "Apariencia",
+    "colorScheme": "Esquema de Color",
+    "highContrast": "Alto Contraste",
+    "language": "Idioma",
+    "privacy": "Privacidad",
+    "analytics": "Analíticas"
+  },
+  "stats": {
+    "title": "Estadísticas",
+    "today": "Hoy",
+    "thisWeek": "Esta Semana",
+    "thisMonth": "Este Mes",
+    "totalFocusTime": "Tiempo Total de Enfoque",
+    "completedSessions": "Sesiones Completadas",
+    "streak": "Racha Actual",
+    "completionRate": "Tasa de Finalización"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "minutes": "minutos",
+    "sessions": "sesiones",
+    "on": "Activado",
+    "off": "Desactivado",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "english": "Inglés",
+    "spanish": "Español"
+  }
+}
