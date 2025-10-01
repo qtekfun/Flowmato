@@ -62,58 +62,36 @@ Write-Host "🏗 Creating Android project..." -ForegroundColor Yellow
 npx expo prebuild --platform android --clear
 
 Write-Host ""
-Write-Host "🎯 Local Build Commands" -ForegroundColor Cyan
-Write-Host "======================" -ForegroundColor Cyan
-Write-Host "To build APK locally, use these commands:"
+Write-Host "🎯 Local Debug Build Commands" -ForegroundColor Cyan
+Write-Host "=============================" -ForegroundColor Cyan
+Write-Host "To build debug APK locally, use these commands:"
 Write-Host ""
-Write-Host "Debug build:"
-Write-Host "  npm run build:local:debug" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "Release build:"
+Write-Host "Debug build (recommended):"
 Write-Host "  npm run build:local" -ForegroundColor Yellow
+Write-Host "  npm run build:local:debug" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Manual build (in android folder):"
 Write-Host "  cd android" -ForegroundColor Yellow
-Write-Host "  ./gradlew assembleDebug     # For debug APK" -ForegroundColor Yellow
-Write-Host "  ./gradlew assembleRelease   # For release APK" -ForegroundColor Yellow
+Write-Host "  ./gradlew assembleDebug" -ForegroundColor Yellow
 Write-Host ""
 
 Write-Host "📁 APK Output Location" -ForegroundColor Cyan
 Write-Host "=====================" -ForegroundColor Cyan
-Write-Host "APK files will be generated in:"
-Write-Host "  android/app/build/outputs/apk/debug/     # Debug APKs" -ForegroundColor Yellow
-Write-Host "  android/app/build/outputs/apk/release/   # Release APKs" -ForegroundColor Yellow
+Write-Host "Debug APK files will be generated in:"
+Write-Host "  android/app/build/outputs/apk/debug/" -ForegroundColor Yellow
 Write-Host ""
 
-Write-Host "🔑 Android Signing (Optional)" -ForegroundColor Cyan
-Write-Host "============================" -ForegroundColor Cyan
-Write-Host "For signed release APKs, you can:"
-Write-Host "1. Generate a keystore:"
-Write-Host "   keytool -genkey -v -keystore release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "2. Add to android/gradle.properties:"
-Write-Host "   MYAPP_RELEASE_STORE_FILE=release.keystore" -ForegroundColor Yellow
-Write-Host "   MYAPP_RELEASE_KEY_ALIAS=release" -ForegroundColor Yellow
-Write-Host "   MYAPP_RELEASE_STORE_PASSWORD=your_password" -ForegroundColor Yellow
-Write-Host "   MYAPP_RELEASE_KEY_PASSWORD=your_password" -ForegroundColor Yellow
-Write-Host ""
-
-Write-Host "🚀 GitHub Actions Setup" -ForegroundColor Cyan
+Write-Host "� GitHub Actions Setup" -ForegroundColor Cyan
 Write-Host "=======================" -ForegroundColor Cyan
-Write-Host "For automated builds in GitHub Actions, add these secrets:"
-Write-Host ""
-Write-Host "Optional (for signed APKs):"
-Write-Host "  ANDROID_KEYSTORE_BASE64      # Base64 encoded keystore file" -ForegroundColor Yellow
-Write-Host "  ANDROID_KEYSTORE_PASSWORD    # Keystore password" -ForegroundColor Yellow
-Write-Host "  ANDROID_KEY_ALIAS           # Key alias" -ForegroundColor Yellow
-Write-Host "  ANDROID_KEY_PASSWORD        # Key password" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "To encode keystore: certutil -encode release.keystore keystore.base64" -ForegroundColor Yellow
+Write-Host "The debug build workflow is ready to use!"
+Write-Host "- Builds debug APK automatically on push"
+Write-Host "- No signing setup required"
+Write-Host "- APK files available as GitHub artifacts"
 Write-Host ""
 
-Write-Host "✅ Local build setup complete!" -ForegroundColor Green
+Write-Host "✅ Debug build setup complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "🎯 Next Steps:" -ForegroundColor Cyan
-Write-Host "1. Try building: npm run build:local:debug" -ForegroundColor Yellow
+Write-Host "1. Try building: npm run build:local" -ForegroundColor Yellow
 Write-Host "2. Check APK: android/app/build/outputs/apk/debug/" -ForegroundColor Yellow
-Write-Host "3. Install on device: adb install path/to/app.apk" -ForegroundColor Yellow
+Write-Host "3. Install on device: adb install path/to/app-debug.apk" -ForegroundColor Yellow

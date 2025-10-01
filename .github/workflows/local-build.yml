@@ -1,4 +1,4 @@
-name: Local Android Build
+name: Local Android Debug Build
 
 on:
   push:
@@ -12,15 +12,6 @@ on:
       - '**.md'
       - 'docs/**'
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: 'Build type'
-        required: true
-        default: 'release'
-        type: choice
-        options:
-          - debug
-          - release
 
 env:
   NODE_VERSION: '18'
@@ -52,8 +43,8 @@ jobs:
       - name: 🧪 Test
         run: npm test
 
-  # Build Android APK locally
-  build-android-local:
+  # Build Android Debug APK
+  build-android-debug:
     needs: pre-build
     runs-on: ubuntu-latest
     steps:
@@ -86,20 +77,6 @@ jobs:
       - name: 🔧 Prebuild Android project
         run: |
           npx expo prebuild --platform android --clear
-          
-      - name: 🔑 Setup Android signing (if secrets available)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 && secrets.ANDROID_KEYSTORE_PASSWORD }}
-        run: |
-          # Decode keystore
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
-          
-          # Create signing config
-          cat >> android/gradle.properties << EOF
-          MYAPP_RELEASE_STORE_FILE=release.keystore
-          MYAPP_RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
-          MYAPP_RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          MYAPP_RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
-          EOF
 
       - name: 🔧 Configure Gradle wrapper
         working-directory: android
@@ -107,166 +84,124 @@ jobs:
           chmod +x gradlew
           ./gradlew --version
 
-      - name: 🏗 Build APK (Debug)
-        if: ${{ github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == '' }}
+      - name: 🏗 Build Debug APK
         working-directory: android
         run: |
           ./gradlew assembleDebug --no-daemon --stacktrace
-          
-      - name: 🏗 Build APK (Release)
-        if: ${{ github.event.inputs.build_type == 'release' || github.event.inputs.build_type == '' }}
-        working-directory: android
-        run: |
-          if [ -f "gradle.properties" ] && grep -q "MYAPP_RELEASE_STORE_FILE" gradle.properties; then
-            echo "Building signed release APK..."
-            ./gradlew assembleRelease --no-daemon --stacktrace
-          else
-            echo "Building unsigned release APK..."
-            ./gradlew assembleRelease --no-daemon --stacktrace
-          fi
 
-      - name: 📱 Locate APK files
+      - name: 📱 Locate Debug APK
         id: locate_apk
         run: |
-          # Find APK files
+          # Find debug APK file
           DEBUG_APK=$(find android/app/build/outputs/apk -name "*debug*.apk" | head -1)
-          RELEASE_APK=$(find android/app/build/outputs/apk -name "*release*.apk" | head -1)
-          
+
           if [ -n "$DEBUG_APK" ]; then
             echo "debug_apk=$DEBUG_APK" >> $GITHUB_OUTPUT
             echo "Found debug APK: $DEBUG_APK"
             ls -la "$DEBUG_APK"
-          fi
-          
-          if [ -n "$RELEASE_APK" ]; then
-            echo "release_apk=$RELEASE_APK" >> $GITHUB_OUTPUT
-            echo "Found release APK: $RELEASE_APK"
-            ls -la "$RELEASE_APK"
+          else
+            echo "No debug APK found"
+            exit 1
           fi
 
       - name: 📝 APK Info
         run: |
-          echo "### 📱 APK Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "### 📱 Debug APK Build Information" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -n "${{ steps.locate_apk.outputs.debug_apk }}" ]; then
-            APK_SIZE=$(du -h "${{ steps.locate_apk.outputs.debug_apk }}" | cut -f1)
-            echo "- **Debug APK**: $APK_SIZE" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ -n "${{ steps.locate_apk.outputs.release_apk }}" ]; then
-            APK_SIZE=$(du -h "${{ steps.locate_apk.outputs.release_apk }}" | cut -f1)
-            echo "- **Release APK**: $APK_SIZE" >> $GITHUB_STEP_SUMMARY
-          fi
-          
+
+          APK_SIZE=$(du -h "${{ steps.locate_apk.outputs.debug_apk }}" | cut -f1)
+          echo "- **Debug APK Size**: $APK_SIZE" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Date**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ready for**: Testing and development" >> $GITHUB_STEP_SUMMARY
 
       - name: 📎 Upload Debug APK
-        if: steps.locate_apk.outputs.debug_apk
         uses: actions/upload-artifact@v4
         with:
           name: flowmato-debug-${{ github.sha }}
           path: ${{ steps.locate_apk.outputs.debug_apk }}
           retention-days: 30
 
-      - name: 📎 Upload Release APK
-        if: steps.locate_apk.outputs.release_apk
-        uses: actions/upload-artifact@v4
-        with:
-          name: flowmato-release-${{ github.sha }}
-          path: ${{ steps.locate_apk.outputs.release_apk }}
-          retention-days: 30
-
   # Create release if this is a tag
   create-release:
-    needs: build-android-local
+    needs: build-android-debug
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: 🏗 Checkout code
         uses: actions/checkout@v4
 
-      - name: 📥 Download APK artifacts
+      - name: 📥 Download Debug APK
         uses: actions/download-artifact@v4
         with:
+          name: flowmato-debug-${{ github.sha }}
           path: ./artifacts
 
       - name: 📝 Prepare release assets
         id: prepare_assets
         run: |
-          # Find downloaded APK files
+          # Find downloaded APK file
           find ./artifacts -name "*.apk" -type f
-          
-          # Rename APKs for release
-          if [ -d "./artifacts/flowmato-debug-${{ github.sha }}" ]; then
-            cp ./artifacts/flowmato-debug-${{ github.sha }}/*.apk ./flowmato-debug.apk
-            echo "debug_apk=./flowmato-debug.apk" >> $GITHUB_OUTPUT
-          fi
-          
-          if [ -d "./artifacts/flowmato-release-${{ github.sha }}" ]; then
-            cp ./artifacts/flowmato-release-${{ github.sha }}/*.apk ./flowmato-release.apk
-            echo "release_apk=./flowmato-release.apk" >> $GITHUB_OUTPUT
-          fi
+
+          # Rename APK for release
+          cp ./artifacts/*.apk ./flowmato-debug.apk
+          echo "debug_apk=./flowmato-debug.apk" >> $GITHUB_OUTPUT
 
       - name: 📝 Generate release notes
         id: release_notes
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          
+
+          APK_SIZE=$(du -h ./flowmato-debug.apk | cut -f1)
+
           cat > release_notes.md << EOF
           # Flowmato $VERSION
-          
-          ## 📱 Android APK
-          
-          This release includes locally built Android APK files:
-          
-          ### Available Downloads
-          EOF
-          
-          if [ -f "./flowmato-release.apk" ]; then
-            APK_SIZE=$(du -h ./flowmato-release.apk | cut -f1)
-            echo "- **Release APK** (Recommended): ${APK_SIZE} - Ready for production use" >> release_notes.md
-          fi
-          
-          if [ -f "./flowmato-debug.apk" ]; then
-            APK_SIZE=$(du -h ./flowmato-debug.apk | cut -f1)
-            echo "- **Debug APK**: ${APK_SIZE} - For testing and development" >> release_notes.md
-          fi
-          
-          cat >> release_notes.md << EOF
-          
+
+          ## 📱 Android Debug APK
+
+          This release includes a debug build for testing and development:
+
+          ### Download
+          - **Debug APK**: ${APK_SIZE} - Ready for testing and sideloading
+
           ## 🚀 Installation Instructions
-          
+
           ### Android
-          1. Download the Release APK (recommended)
+          1. Download the Debug APK
           2. Enable "Install from unknown sources" in your Android device settings
           3. Install the APK file
-          
+
           ## 📋 Requirements
           - **Android**: Android 6.0+ (API level 23)
-          
+
+          ## ⚠️ Debug Build Notice
+          This is a debug build intended for:
+          - Testing and development
+          - Internal distribution
+          - Debugging purposes
+
+          For production use, consider building a release APK with proper signing.
+
           ## 🔧 Build Information
-          - **Built with**: Local GitHub Actions (no EAS dependency)
+          - **Built with**: Local GitHub Actions (EAS-free)
           - **Build Date**: $(date)
           - **Commit**: ${{ github.sha }}
           - **Node.js**: ${{ env.NODE_VERSION }}
           - **Java**: ${{ env.JAVA_VERSION }}
-          
+          - **Build Type**: Debug
+
           ---
-          
+
           Built with ❤️ using Expo and React Native
           EOF
 
       - name: 🎉 Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Flowmato ${{ steps.release_notes.outputs.VERSION }}
+          name: Flowmato ${{ steps.release_notes.outputs.VERSION }} (Debug)
           body_path: release_notes.md
           files: |
-            ./flowmato-*.apk
+            ./flowmato-debug.apk
           draft: false
-          prerelease: ${{ contains(github.ref, '-') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: true

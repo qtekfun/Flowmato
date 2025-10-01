@@ -116,7 +116,7 @@ npm run build:local:debug
 
 ### On Android Device
 1. Download APK from GitHub Actions artifacts
-2. Enable "Unknown sources" in device settings  
+2. Enable "Unknown sources" in device settings
 3. Install APK file
 
 ### Using ADB

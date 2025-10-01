@@ -6,7 +6,7 @@ This guide explains how to build APK files locally without using EAS (Expo Appli
 
 ### 1. EAS-Free Local Build (Recommended)
 - ✅ **No EAS dependency** - Build with local Android tools
-- ✅ **Free** - No Expo build service costs  
+- ✅ **Free** - No Expo build service costs
 - ✅ **GitHub Actions ready** - Automated CI/CD
 - ✅ **Full control** - Customize build process
 
@@ -24,7 +24,7 @@ This guide explains how to build APK files locally without using EAS (Expo Appli
 # Windows
 npm run setup:local
 
-# macOS/Linux  
+# macOS/Linux
 npm run setup:local:bash
 ```
 
