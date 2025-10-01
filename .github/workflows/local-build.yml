@@ -1,0 +1,272 @@
+name: Local Android Build
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main, master]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - debug
+          - release
+
+env:
+  NODE_VERSION: '18'
+  JAVA_VERSION: '11'
+
+jobs:
+  # Pre-build checks
+  pre-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Type check
+        run: npm run type-check
+
+      - name: 🧹 Lint
+        run: npm run lint
+
+      - name: 🧪 Test
+        run: npm test
+
+  # Build Android APK locally
+  build-android-local:
+    needs: pre-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗 Setup Expo
+        run: |
+          npm install -g @expo/cli@latest
+          npx expo install --fix
+
+      - name: 🔧 Prebuild Android project
+        run: |
+          npx expo prebuild --platform android --clear
+          
+      - name: 🔑 Setup Android signing (if secrets available)
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 && secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          # Decode keystore
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+          
+          # Create signing config
+          cat >> android/gradle.properties << EOF
+          MYAPP_RELEASE_STORE_FILE=release.keystore
+          MYAPP_RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+          MYAPP_RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MYAPP_RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+
+      - name: 🔧 Configure Gradle wrapper
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --version
+
+      - name: 🏗 Build APK (Debug)
+        if: ${{ github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == '' }}
+        working-directory: android
+        run: |
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          
+      - name: 🏗 Build APK (Release)
+        if: ${{ github.event.inputs.build_type == 'release' || github.event.inputs.build_type == '' }}
+        working-directory: android
+        run: |
+          if [ -f "gradle.properties" ] && grep -q "MYAPP_RELEASE_STORE_FILE" gradle.properties; then
+            echo "Building signed release APK..."
+            ./gradlew assembleRelease --no-daemon --stacktrace
+          else
+            echo "Building unsigned release APK..."
+            ./gradlew assembleRelease --no-daemon --stacktrace
+          fi
+
+      - name: 📱 Locate APK files
+        id: locate_apk
+        run: |
+          # Find APK files
+          DEBUG_APK=$(find android/app/build/outputs/apk -name "*debug*.apk" | head -1)
+          RELEASE_APK=$(find android/app/build/outputs/apk -name "*release*.apk" | head -1)
+          
+          if [ -n "$DEBUG_APK" ]; then
+            echo "debug_apk=$DEBUG_APK" >> $GITHUB_OUTPUT
+            echo "Found debug APK: $DEBUG_APK"
+            ls -la "$DEBUG_APK"
+          fi
+          
+          if [ -n "$RELEASE_APK" ]; then
+            echo "release_apk=$RELEASE_APK" >> $GITHUB_OUTPUT
+            echo "Found release APK: $RELEASE_APK"
+            ls -la "$RELEASE_APK"
+          fi
+
+      - name: 📝 APK Info
+        run: |
+          echo "### 📱 APK Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -n "${{ steps.locate_apk.outputs.debug_apk }}" ]; then
+            APK_SIZE=$(du -h "${{ steps.locate_apk.outputs.debug_apk }}" | cut -f1)
+            echo "- **Debug APK**: $APK_SIZE" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -n "${{ steps.locate_apk.outputs.release_apk }}" ]; then
+            APK_SIZE=$(du -h "${{ steps.locate_apk.outputs.release_apk }}" | cut -f1)
+            echo "- **Release APK**: $APK_SIZE" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "- **Build Date**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📎 Upload Debug APK
+        if: steps.locate_apk.outputs.debug_apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: flowmato-debug-${{ github.sha }}
+          path: ${{ steps.locate_apk.outputs.debug_apk }}
+          retention-days: 30
+
+      - name: 📎 Upload Release APK
+        if: steps.locate_apk.outputs.release_apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: flowmato-release-${{ github.sha }}
+          path: ${{ steps.locate_apk.outputs.release_apk }}
+          retention-days: 30
+
+  # Create release if this is a tag
+  create-release:
+    needs: build-android-local
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: 📝 Prepare release assets
+        id: prepare_assets
+        run: |
+          # Find downloaded APK files
+          find ./artifacts -name "*.apk" -type f
+          
+          # Rename APKs for release
+          if [ -d "./artifacts/flowmato-debug-${{ github.sha }}" ]; then
+            cp ./artifacts/flowmato-debug-${{ github.sha }}/*.apk ./flowmato-debug.apk
+            echo "debug_apk=./flowmato-debug.apk" >> $GITHUB_OUTPUT
+          fi
+          
+          if [ -d "./artifacts/flowmato-release-${{ github.sha }}" ]; then
+            cp ./artifacts/flowmato-release-${{ github.sha }}/*.apk ./flowmato-release.apk
+            echo "release_apk=./flowmato-release.apk" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📝 Generate release notes
+        id: release_notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          
+          cat > release_notes.md << EOF
+          # Flowmato $VERSION
+          
+          ## 📱 Android APK
+          
+          This release includes locally built Android APK files:
+          
+          ### Available Downloads
+          EOF
+          
+          if [ -f "./flowmato-release.apk" ]; then
+            APK_SIZE=$(du -h ./flowmato-release.apk | cut -f1)
+            echo "- **Release APK** (Recommended): ${APK_SIZE} - Ready for production use" >> release_notes.md
+          fi
+          
+          if [ -f "./flowmato-debug.apk" ]; then
+            APK_SIZE=$(du -h ./flowmato-debug.apk | cut -f1)
+            echo "- **Debug APK**: ${APK_SIZE} - For testing and development" >> release_notes.md
+          fi
+          
+          cat >> release_notes.md << EOF
+          
+          ## 🚀 Installation Instructions
+          
+          ### Android
+          1. Download the Release APK (recommended)
+          2. Enable "Install from unknown sources" in your Android device settings
+          3. Install the APK file
+          
+          ## 📋 Requirements
+          - **Android**: Android 6.0+ (API level 23)
+          
+          ## 🔧 Build Information
+          - **Built with**: Local GitHub Actions (no EAS dependency)
+          - **Build Date**: $(date)
+          - **Commit**: ${{ github.sha }}
+          - **Node.js**: ${{ env.NODE_VERSION }}
+          - **Java**: ${{ env.JAVA_VERSION }}
+          
+          ---
+          
+          Built with ❤️ using Expo and React Native
+          EOF
+
+      - name: 🎉 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Flowmato ${{ steps.release_notes.outputs.VERSION }}
+          body_path: release_notes.md
+          files: |
+            ./flowmato-*.apk
+          draft: false
+          prerelease: ${{ contains(github.ref, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

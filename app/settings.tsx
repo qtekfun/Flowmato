@@ -9,7 +9,7 @@ export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
   const { config, updateConfig } = useTimerStore();
-  
+
   const [localConfig, setLocalConfig] = useState(config);
 
   const handleSave = () => {
@@ -78,34 +78,34 @@ export default function SettingsScreen() {
         ]}>
           {t('settings.timer')}
         </Text>
-        
+
         {renderSetting(
           t('settings.focusDuration'),
           localConfig.focusDuration,
           (value) => setLocalConfig({ ...localConfig, focusDuration: value }),
           'number'
         )}
-        
+
         {renderSetting(
           t('settings.shortBreakDuration'),
           localConfig.shortBreakDuration,
           (value) => setLocalConfig({ ...localConfig, shortBreakDuration: value }),
           'number'
         )}
-        
+
         {renderSetting(
           t('settings.longBreakDuration'),
           localConfig.longBreakDuration,
           (value) => setLocalConfig({ ...localConfig, longBreakDuration: value }),
           'number'
         )}
-        
+
         {renderSetting(
           t('settings.autoStartNext'),
           localConfig.autoStartNext,
           (value) => setLocalConfig({ ...localConfig, autoStartNext: value })
         )}
-        
+
         {renderSetting(
           t('settings.allowPause'),
           localConfig.allowPause,

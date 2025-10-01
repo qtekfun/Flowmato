@@ -8,9 +8,9 @@ import { getPhaseColor } from '@/utils/timer';
 export default function ProgressIndicator() {
   const colorScheme = useColorScheme();
   const { phase, sessionCount, totalSessions, timeRemaining, config } = useTimerStore();
-  
+
   const phaseColor = getPhaseColor(phase, colorScheme === 'dark');
-  
+
   // Calculate progress for current session
   const getDurationForPhase = () => {
     switch (phase) {
@@ -24,7 +24,7 @@ export default function ProgressIndicator() {
         return config.focusDuration;
     }
   };
-  
+
   const totalDuration = getDurationForPhase() * 60; // in seconds
   const elapsed = totalDuration - timeRemaining;
   const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
@@ -39,7 +39,7 @@ export default function ProgressIndicator() {
         ]}>
           Session {sessionCount + 1} of {totalSessions}
         </Text>
-        
+
         {/* Session Dots */}
         <View style={styles.sessionDots}>
           {Array.from({ length: totalSessions }).map((_, index) => (
@@ -48,8 +48,8 @@ export default function ProgressIndicator() {
               style={[
                 styles.sessionDot,
                 {
-                  backgroundColor: index < sessionCount 
-                    ? phaseColor 
+                  backgroundColor: index < sessionCount
+                    ? phaseColor
                     : (colorScheme === 'dark' ? '#374151' : '#E5E7EB'),
                 }
               ]}

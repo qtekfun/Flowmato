@@ -12,7 +12,7 @@ interface InputState {
 export default function TimerSettings() {
   const colorScheme = useColorScheme();
   const { config, updateConfig } = useTimerStore();
-  
+
   // Local state for form inputs
   const [localConfig, setLocalConfig] = useState<TimerConfig>(config);
   const [inputStates, setInputStates] = useState<InputState>({
@@ -33,10 +33,10 @@ export default function TimerSettings() {
   const handleNumberInputChange = (key: string, text: string, min: number, max: number) => {
     // Update the input state to show what user typed
     setInputStates(prev => ({ ...prev, [key]: text }));
-    
+
     // Try to parse the number
     const num = parseInt(text);
-    
+
     // If it's a valid number within range, update the config
     if (!isNaN(num) && num >= min && num <= max) {
       handleConfigChange(key as keyof TimerConfig, num);
@@ -82,10 +82,10 @@ export default function TimerSettings() {
     max: number = 120
   ) => {
     const inputValue = inputStates[configKey as string] || value.toString();
-    const isValidInput = !isNaN(parseInt(inputValue)) && 
-                        parseInt(inputValue) >= min && 
+    const isValidInput = !isNaN(parseInt(inputValue)) &&
+                        parseInt(inputValue) >= min &&
                         parseInt(inputValue) <= max;
-    
+
     return (
       <View style={styles.settingRow}>
         <View style={styles.settingInfo}>
@@ -117,7 +117,7 @@ export default function TimerSettings() {
             <Text style={[
               styles.numberButtonText,
               {
-                color: value <= min 
+                color: value <= min
                   ? (colorScheme === 'dark' ? '#6B7280' : '#9CA3AF')
                   : (colorScheme === 'dark' ? '#E5E7EB' : '#374151')
               }
@@ -125,13 +125,13 @@ export default function TimerSettings() {
               −
             </Text>
           </TouchableOpacity>
-          
+
           <TextInput
             style={[
               styles.numberInput,
               {
                 backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#FFFFFF',
-                borderColor: isValidInput 
+                borderColor: isValidInput
                   ? (colorScheme === 'dark' ? '#4B5563' : '#D1D5DB')
                   : (colorScheme === 'dark' ? '#DC2626' : '#EF4444'),
                 color: colorScheme === 'dark' ? '#E5E7EB' : '#374151',
@@ -150,7 +150,7 @@ export default function TimerSettings() {
             textAlign="center"
             selectTextOnFocus={true}
           />
-          
+
           <TouchableOpacity
             style={[
               styles.numberButton,
@@ -165,7 +165,7 @@ export default function TimerSettings() {
             <Text style={[
               styles.numberButtonText,
               {
-                color: value >= max 
+                color: value >= max
                   ? (colorScheme === 'dark' ? '#6B7280' : '#9CA3AF')
                   : (colorScheme === 'dark' ? '#E5E7EB' : '#374151')
               }
@@ -221,7 +221,7 @@ export default function TimerSettings() {
         ]}>
           Timer Durations
         </Text>
-        
+
         {renderNumberInput(
           'Focus Session',
           'focusDuration',
@@ -230,7 +230,7 @@ export default function TimerSettings() {
           5,
           120
         )}
-        
+
         {renderNumberInput(
           'Short Break',
           'shortBreakDuration',
@@ -239,7 +239,7 @@ export default function TimerSettings() {
           1,
           30
         )}
-        
+
         {renderNumberInput(
           'Long Break',
           'longBreakDuration',
@@ -248,7 +248,7 @@ export default function TimerSettings() {
           5,
           60
         )}
-        
+
         {renderNumberInput(
           'Long Break Every',
           'longBreakEvery',
@@ -267,7 +267,7 @@ export default function TimerSettings() {
         ]}>
           Session Planning
         </Text>
-        
+
         {renderNumberInput(
           'Total Focus Sessions',
           'totalSessions',
@@ -286,14 +286,14 @@ export default function TimerSettings() {
         ]}>
           Behavior
         </Text>
-        
+
         {renderSwitchRow(
           'Auto-start Next Session',
           'Automatically start the next timer when current one ends',
           localConfig.autoStartNext,
           (value) => handleConfigChange('autoStartNext', value)
         )}
-        
+
         {renderSwitchRow(
           'Allow Pause',
           'Enable pause/resume functionality during sessions',
@@ -323,7 +323,7 @@ export default function TimerSettings() {
               Reset
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[
               styles.actionButton,

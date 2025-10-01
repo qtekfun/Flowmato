@@ -1,10 +1,49 @@
 # Local Native Build Guide for Flowmato
 
-This guide explains how to build and run the Flowmato app locally on your machine for both iOS and Android using the Expo prebuild/native workflow (no EAS cloud required).
+This guide explains how to build APK files locally without using EAS (Expo Application Services), giving you complete control over the build process.
+
+## 🎯 Two Build Approaches
+
+### 1. EAS-Free Local Build (Recommended)
+- ✅ **No EAS dependency** - Build with local Android tools
+- ✅ **Free** - No Expo build service costs  
+- ✅ **GitHub Actions ready** - Automated CI/CD
+- ✅ **Full control** - Customize build process
+
+### 2. Traditional Expo Prebuild
+- Uses local development workflow
+- Requires manual setup of native tools
+- Good for development and testing
 
 ---
 
-## Prerequisites
+## 🚀 Quick Start (EAS-Free Build)
+
+### Setup Local Build Environment
+```bash
+# Windows
+npm run setup:local
+
+# macOS/Linux  
+npm run setup:local:bash
+```
+
+### Build APK Files
+```bash
+# Debug build (for testing)
+npm run build:local:debug
+
+# Release build (for distribution)
+npm run build:local
+```
+
+### Find Your APK
+- **Debug**: `android/app/build/outputs/apk/debug/`
+- **Release**: `android/app/build/outputs/apk/release/`
+
+---
+
+## 📋 Prerequisites
 - **Node.js** 18+
 - **npm** (or yarn)
 - **Expo CLI**: `npm install -g expo-cli`

@@ -32,7 +32,7 @@ export default function App() {
         </Text>
       </View>
       <View style={styles.headerActions}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.headerButton}
           onPress={() => setCurrentView('settings')}
         >
@@ -100,7 +100,7 @@ export default function App() {
         }
       ]}>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        
+
         {currentView === 'timer' && renderTimerView()}
         {currentView === 'settings' && renderSettingsView()}
       </SafeAreaView>

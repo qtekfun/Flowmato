@@ -8,7 +8,7 @@ import { useTheme } from '@/providers/ThemeProvider';
 export default function TimerControls() {
   const colorScheme = useColorScheme();
   const { start, pause, resume, reset, skip, resetDailyProgress, state, config } = useTimerStore();
-  
+
   const handlePrimaryAction = () => {
     switch (state) {
       case 'idle':
@@ -49,7 +49,7 @@ export default function TimerControls() {
         style={[
           styles.primaryButton,
           {
-            backgroundColor: isPrimaryDisabled 
+            backgroundColor: isPrimaryDisabled
               ? (colorScheme === 'dark' ? '#374151' : '#E5E7EB')
               : (colorScheme === 'dark' ? '#3B82F6' : '#2563EB'),
           },
@@ -61,7 +61,7 @@ export default function TimerControls() {
         <Text style={[
           styles.primaryButtonText,
           {
-            color: isPrimaryDisabled 
+            color: isPrimaryDisabled
               ? (colorScheme === 'dark' ? '#6B7280' : '#9CA3AF')
               : '#FFFFFF',
           }
@@ -86,7 +86,7 @@ export default function TimerControls() {
           <Text style={[
             styles.secondaryButtonText,
             {
-              color: state === 'idle' 
+              color: state === 'idle'
                 ? (colorScheme === 'dark' ? '#6B7280' : '#9CA3AF')
                 : (colorScheme === 'dark' ? '#E5E7EB' : '#374151'),
             }

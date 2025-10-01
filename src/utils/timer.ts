@@ -67,14 +67,14 @@ export function formatDuration(minutes: number): string {
   if (minutes < 60) {
     return `${minutes}m`;
   }
-  
+
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  
+
   if (remainingMinutes === 0) {
     return `${hours}h`;
   }
-  
+
   return `${hours}h ${remainingMinutes}m`;
 }
 
@@ -102,31 +102,31 @@ function generateSessionId(): string {
  */
 export function validateTimerConfig(config: Partial<TimerConfig>): string[] {
   const errors: string[] = [];
-  
+
   if (config.focusDuration !== undefined) {
     if (config.focusDuration < 1 || config.focusDuration > 120) {
       errors.push('Focus duration must be between 1 and 120 minutes');
     }
   }
-  
+
   if (config.shortBreakDuration !== undefined) {
     if (config.shortBreakDuration < 1 || config.shortBreakDuration > 60) {
       errors.push('Short break duration must be between 1 and 60 minutes');
     }
   }
-  
+
   if (config.longBreakDuration !== undefined) {
     if (config.longBreakDuration < 1 || config.longBreakDuration > 120) {
       errors.push('Long break duration must be between 1 and 120 minutes');
     }
   }
-  
+
   if (config.longBreakEvery !== undefined) {
     if (config.longBreakEvery < 2 || config.longBreakEvery > 10) {
       errors.push('Long break interval must be between 2 and 10 sessions');
     }
   }
-  
+
   return errors;
 }
 
@@ -143,10 +143,10 @@ export function reconcileTimerState(
   const elapsedMs = currentTime.getTime() - session.startTime.getTime();
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
   const totalDurationSeconds = session.plannedDuration * 60;
-  
+
   const timeRemaining = Math.max(0, totalDurationSeconds - elapsedSeconds);
   const isExpired = timeRemaining === 0;
-  
+
   return {
     timeRemaining,
     isExpired,
@@ -162,7 +162,7 @@ export function getPhaseColor(phase: TimerPhase, isDark: boolean = false): strin
     shortBreak: isDark ? '#16a34a' : '#22c55e',
     longBreak: isDark ? '#2563eb' : '#3b82f6',
   };
-  
+
   return colors[phase];
 }
 
@@ -175,6 +175,6 @@ export function getPhaseDisplayName(phase: TimerPhase): string {
     shortBreak: 'Short Break',
     longBreak: 'Long Break',
   };
-  
+
   return names[phase];
 }

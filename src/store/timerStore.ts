@@ -371,13 +371,13 @@ useTimerStore.subscribe(
           if (state.config.autoStartNext) {
             setTimeout(() => {
               const currentState = useTimerStore.getState();
-              
+
               // Check if all sessions are completed
               let newSessionCount = currentState.sessionCount;
               if (currentState.phase === 'focus') {
                 newSessionCount += 1;
               }
-              
+
               // Don't auto-start if we've completed all sessions for the day
               if (newSessionCount >= currentState.totalSessions && currentState.phase === 'focus') {
                 // All sessions completed for the day
@@ -387,7 +387,7 @@ useTimerStore.subscribe(
                 });
                 return;
               }
-              
+
               const nextPhase = calculateNextPhase(currentState.phase, currentState.sessionCount, currentState.config);
               const duration = getDurationForPhase(nextPhase, currentState.config);
 

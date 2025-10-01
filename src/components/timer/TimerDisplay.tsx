@@ -8,19 +8,19 @@ import { formatTime, getPhaseColor } from '@/utils/timer';
 export default function TimerDisplay() {
   const colorScheme = useColorScheme();
   const { timeRemaining, phase, sessionCount, totalSessions } = useTimerStore();
-  
+
   const phaseColor = getPhaseColor(phase, colorScheme === 'dark');
-  
+
   return (
     <View style={styles.container}>
       {/* Main Timer Display */}
-      <View 
+      <View
         style={[
           styles.timerCircle,
           { borderColor: phaseColor }
         ]}
       >
-        <Text 
+        <Text
           style={[
             styles.timerText,
             { color: phaseColor }
@@ -29,9 +29,9 @@ export default function TimerDisplay() {
           {formatTime(timeRemaining)}
         </Text>
       </View>
-      
+
       {/* Phase Label */}
-      <Text 
+      <Text
         style={[
           styles.phaseLabel,
           { color: phaseColor }
@@ -39,7 +39,7 @@ export default function TimerDisplay() {
       >
         {getPhaseDisplayName(phase)}
       </Text>
-      
+
       {/* Session Progress */}
       <Text style={[
         styles.sessionProgress,
@@ -47,7 +47,7 @@ export default function TimerDisplay() {
       ]}>
         Session {sessionCount + 1} of {totalSessions}
       </Text>
-      
+
       {/* Secondary Info */}
       <Text style={[
         styles.secondaryText,

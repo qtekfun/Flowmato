@@ -58,7 +58,7 @@ A comprehensive, TypeScript-first React Native Pomodoro app with cross-platform 
 ## 🛠 Development Setup
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - Expo CLI
 - Android Studio (for Android development)

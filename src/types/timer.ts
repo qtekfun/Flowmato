@@ -32,14 +32,14 @@ export interface TimerStore {
   totalSessions: number;
   isRunning: boolean;
   isPaused: boolean;
-  
+
   // Configuration
   config: TimerConfig;
-  
+
   // Session tracking
   currentSession: TimerSession | null;
   sessionHistory: TimerSession[];
-  
+
   // Actions
   start: () => void;
   pause: () => void;

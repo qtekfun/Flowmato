@@ -1,0 +1,63 @@
+name: Development Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - android
+          - ios
+          - all
+      profile:
+        description: 'Build profile'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - development
+          - preview
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  build-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔧 Setup EAS local builds
+        run: eas build:configure
+
+      - name: 🏗 Create development build
+        run: |
+          if [[ "${{ github.event.inputs.platform }}" == "android" ]]; then
+            eas build --platform android --profile ${{ github.event.inputs.profile }} --non-interactive
+          elif [[ "${{ github.event.inputs.platform }}" == "ios" ]]; then
+            eas build --platform ios --profile ${{ github.event.inputs.profile }} --non-interactive
+          else
+            eas build --platform all --profile ${{ github.event.inputs.profile }} --non-interactive
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

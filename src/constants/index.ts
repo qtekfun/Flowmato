@@ -44,7 +44,7 @@ export const NOTIFICATION_CHANNELS = {
 
 export const AUDIO_FILES = {
   soft: 'chime-soft',
-  bell: 'chime-bell', 
+  bell: 'chime-bell',
   marimba: 'chime-marimba',
   woodblock: 'chime-woodblock',
 } as const;

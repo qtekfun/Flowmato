@@ -1,0 +1,308 @@
+name: Build Mobile Apps
+
+on:
+  push:
+    branches: [main, master]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - android
+          - ios
+          - all
+
+env:
+  NODE_VERSION: '18'
+  EXPO_CLI_VERSION: 'latest'
+
+jobs:
+  # Pre-build checks
+  pre-build:
+    runs-on: ubuntu-latest
+    outputs:
+      should-build-android: ${{ steps.check.outputs.android }}
+      should-build-ios: ${{ steps.check.outputs.ios }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Check build requirements
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ github.event.inputs.platform }}" == "android" || "${{ github.event.inputs.platform }}" == "all" ]]; then
+              echo "android=true" >> $GITHUB_OUTPUT
+            else
+              echo "android=false" >> $GITHUB_OUTPUT
+            fi
+            if [[ "${{ github.event.inputs.platform }}" == "ios" || "${{ github.event.inputs.platform }}" == "all" ]]; then
+              echo "ios=true" >> $GITHUB_OUTPUT
+            else
+              echo "ios=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "android=true" >> $GITHUB_OUTPUT
+            echo "ios=true" >> $GITHUB_OUTPUT
+          fi
+
+  # Build Android APK
+  build-android:
+    needs: pre-build
+    if: needs.pre-build.outputs.should-build-android == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_CLI_VERSION }}
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔧 Setup EAS local builds
+        run: |
+          eas build:configure
+
+      - name: 🏗 Create Android build
+        run: |
+          eas build --platform android --profile preview --non-interactive --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📱 Download Android artifact
+        if: success()
+        run: |
+          # Wait for build to complete and download
+          eas build:list --platform android --limit 1 --json > build_info.json
+          BUILD_ID=$(cat build_info.json | jq -r '.[0].id')
+          echo "Waiting for build $BUILD_ID to complete..."
+
+          # Poll build status
+          while true; do
+            STATUS=$(eas build:view $BUILD_ID --json | jq -r '.status')
+            echo "Build status: $STATUS"
+
+            if [[ "$STATUS" == "FINISHED" ]]; then
+              echo "Build completed successfully!"
+              break
+            elif [[ "$STATUS" == "ERRORED" || "$STATUS" == "CANCELED" ]]; then
+              echo "Build failed with status: $STATUS"
+              exit 1
+            fi
+
+            sleep 30
+          done
+
+          # Download the APK
+          ARTIFACT_URL=$(eas build:view $BUILD_ID --json | jq -r '.artifacts.buildUrl // .buildUrl')
+          if [[ "$ARTIFACT_URL" != "null" && "$ARTIFACT_URL" != "" ]]; then
+            curl -L -o flowmato-android.apk "$ARTIFACT_URL"
+            echo "Downloaded APK successfully"
+          else
+            echo "No artifact URL found"
+            exit 1
+          fi
+
+      - name: 📎 Upload Android APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: flowmato-android-${{ github.sha }}
+          path: flowmato-android.apk
+          retention-days: 30
+
+  # Build iOS IPA
+  build-ios:
+    needs: pre-build
+    if: needs.pre-build.outputs.should-build-ios == 'true'
+    runs-on: macos-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: ${{ env.EXPO_CLI_VERSION }}
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🍎 Setup iOS certificates
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # This will be handled by EAS Build with proper credentials
+          echo "iOS certificates will be managed by EAS Build"
+
+      - name: 🔧 Setup EAS local builds
+        run: |
+          eas build:configure
+
+      - name: 🏗 Create iOS build
+        run: |
+          eas build --platform ios --profile preview --non-interactive --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📱 Download iOS artifact
+        if: success()
+        run: |
+          # Wait for build to complete and download
+          eas build:list --platform ios --limit 1 --json > build_info.json
+          BUILD_ID=$(cat build_info.json | jq -r '.[0].id')
+          echo "Waiting for build $BUILD_ID to complete..."
+
+          # Poll build status
+          while true; do
+            STATUS=$(eas build:view $BUILD_ID --json | jq -r '.status')
+            echo "Build status: $STATUS"
+
+            if [[ "$STATUS" == "FINISHED" ]]; then
+              echo "Build completed successfully!"
+              break
+            elif [[ "$STATUS" == "ERRORED" || "$STATUS" == "CANCELED" ]]; then
+              echo "Build failed with status: $STATUS"
+              exit 1
+            fi
+
+            sleep 30
+          done
+
+          # Download the IPA
+          ARTIFACT_URL=$(eas build:view $BUILD_ID --json | jq -r '.artifacts.buildUrl // .buildUrl')
+          if [[ "$ARTIFACT_URL" != "null" && "$ARTIFACT_URL" != "" ]]; then
+            curl -L -o flowmato-ios.ipa "$ARTIFACT_URL"
+            echo "Downloaded IPA successfully"
+          else
+            echo "No artifact URL found"
+            exit 1
+          fi
+
+      - name: 📎 Upload iOS IPA
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: flowmato-ios-${{ github.sha }}
+          path: flowmato-ios.ipa
+          retention-days: 30
+
+  # Create release if this is a tag
+  release:
+    needs: [build-android, build-ios]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: flowmato-android-${{ github.sha }}
+          path: ./artifacts
+
+      - name: 📥 Download iOS IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: flowmato-ios-${{ github.sha }}
+          path: ./artifacts
+
+      - name: 📝 Generate release notes
+        id: release_notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+          cat > release_notes.md << EOF
+          # Flowmato $VERSION
+
+          ## 📱 Mobile Apps
+
+          ### Android
+          - **APK**: Ready for sideloading on Android devices
+          - **Size**: $(du -h ./artifacts/flowmato-android.apk | cut -f1)
+
+          ### iOS
+          - **IPA**: Ready for installation via TestFlight or enterprise distribution
+          - **Size**: $(du -h ./artifacts/flowmato-ios.ipa | cut -f1)
+
+          ## 🚀 Installation
+
+          ### Android
+          1. Download the APK file
+          2. Enable "Install from unknown sources" in your device settings
+          3. Install the APK file
+
+          ### iOS
+          1. Download the IPA file
+          2. Install via TestFlight, Xcode, or enterprise distribution method
+
+          ## 📋 Requirements
+          - **Android**: Android 6.0+ (API level 23)
+          - **iOS**: iOS 13.0+
+
+          ---
+
+          Built with ❤️ using Expo and React Native
+          EOF
+
+      - name: 🎉 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Flowmato ${{ steps.release_notes.outputs.VERSION }}
+          body_path: release_notes.md
+          files: |
+            ./artifacts/flowmato-android.apk
+            ./artifacts/flowmato-ios.ipa
+          draft: false
+          prerelease: ${{ contains(github.ref, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

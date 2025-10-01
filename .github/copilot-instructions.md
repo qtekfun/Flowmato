@@ -31,7 +31,7 @@ This workspace contains a comprehensive, TypeScript-first React Native Pomodoro 
 
 ### Next Steps for Full Implementation
 1. Add notification providers implementation
-2. Add audio theme functionality  
+2. Add audio theme functionality
 3. Implement native modules for widgets
 4. Add PWA manifest and service worker
 5. Create CI/CD pipelines

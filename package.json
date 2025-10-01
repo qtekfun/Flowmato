@@ -13,6 +13,12 @@
     "build:ios": "eas build --platform ios",
     "build:web": "expo export --platform web",
     "build:electron": "npm run build:web && electron-builder",
+    "build:preview": "eas build --platform all --profile preview",
+    "build:production": "eas build --platform all --profile production",
+    "build:android:preview": "eas build --platform android --profile preview",
+    "build:ios:preview": "eas build --platform ios --profile preview",
+    "build:android:production": "eas build --platform android --profile production",
+    "build:ios:production": "eas build --platform ios --profile production",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -24,7 +30,13 @@
     "format": "prettier --write .",
     "prebuild": "expo prebuild",
     "clean": "expo r -c",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "setup:cicd": "powershell -ExecutionPolicy Bypass -File scripts/setup-cicd.ps1",
+    "setup:cicd:bash": "bash scripts/setup-cicd.sh",
+    "build:local": "expo prebuild --platform android --clear && cd android && ./gradlew assembleRelease",
+    "build:local:debug": "expo prebuild --platform android --clear && cd android && ./gradlew assembleDebug",
+    "setup:local": "powershell -ExecutionPolicy Bypass -File scripts/setup-local-build.ps1",
+    "setup:local:bash": "bash scripts/setup-local-build.sh"
   },
   "dependencies": {
   "@expo/vector-icons": "^13.0.0",

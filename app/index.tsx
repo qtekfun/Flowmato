@@ -12,11 +12,11 @@ import { useTranslation } from 'react-i18next';
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
-  const { 
-    phase, 
-    isRunning, 
-    sessionCount, 
-    totalSessions 
+  const {
+    phase,
+    isRunning,
+    sessionCount,
+    totalSessions
   } = useTimerStore();
 
   return (
