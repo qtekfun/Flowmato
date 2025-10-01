@@ -32,7 +32,7 @@ jobs:
           cache: 'npm'
 
       - name: 📦 Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: 🔍 Type check
         run: npm run type-check
@@ -67,7 +67,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: 📦 Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: 🏗 Setup Expo
         run: |
