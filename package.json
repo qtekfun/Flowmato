@@ -67,7 +67,7 @@
     "babel-plugin-module-resolver": "^5.0.0",
     "cypress": "^13.3.0",
     "detox": "^20.13.0",
-    "electron": "^26.2.1",
+    "electron": "^35.7.5",
     "electron-builder": "^24.6.4",
     "eslint": "^8.49.0",
     "eslint-config-expo": "~7.0.0",
